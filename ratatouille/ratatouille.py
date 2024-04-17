@@ -7,6 +7,7 @@ import socket
 import signal
 import sys
 import os
+import io
 from collections import OrderedDict
 
 
@@ -271,7 +272,26 @@ class Network(AbstractWatcher):
         self.last_byte_numbers = byte_numbers
         return speeds
 
+class IO(AbstractWatcher):
+    header = ['DiskReads', 'DiskWrites']
+    
+    @staticmethod
+    def get_values():
+        bytes_read = 0
+        bytes_write = 0
+        with open('/proc/diskstats', 'r') as f:
+            for line in f:
+                parts = line.split()
+                if parts[2].startswith('loop'):
+                    continue  
+                if len(parts) > 11: 
+                    read_sectors = int(parts[5])
+                    write_sectors = int(parts[9])
+                    bytes_read += read_sectors * 512
+                    bytes_write += write_sectors * 512
 
+        return [bytes_read, bytes_write]
+        
 class Monitor:
     def __init__(self, watchers, output_file, time_interval):
         self.watchers = watchers
@@ -316,6 +336,7 @@ monitor_classes = {
     'cpu_load': CPULoad,
     'network': Network,
     'fan_speed': FanSpeed,
+    'io': IO,
 }
 
 

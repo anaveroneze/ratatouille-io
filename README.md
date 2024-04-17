@@ -2,6 +2,13 @@
 
 [![DOI](https://zenodo.org/badge/173307160.svg)](https://zenodo.org/badge/latestdoi/173307160)
 
+## Local Installation
+
+```
+curl -sSL https://install.python-poetry.org | python3 -
+poetry install ratatouille
+```
+
 ## Installation
 
 The best way to install `ratatouille` is from pypi:
