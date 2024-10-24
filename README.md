@@ -9,6 +9,8 @@ curl -sSL https://install.python-poetry.org | python3 -
 poetry install ratatouille
 ```
 
+Use other configuration file for newer python versions.
+
 ## Installation
 
 The best way to install `ratatouille` is from pypi:
