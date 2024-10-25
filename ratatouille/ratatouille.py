@@ -300,22 +300,7 @@ class GPU(AbstractWatcher):
             temperature = pynvml.nvmlDeviceGetTemperature(handle, pynvml.NVML_TEMPERATURE_GPU)
             util_info = pynvml.nvmlDeviceGetUtilizationRates(handle)
             mem_info = pynvml.nvmlDeviceGetMemoryInfo(handle)
-
-            # gpu_info = {
-            #     'name': name,
-            #     'timestamp': timestamp,
-            #     'pci.bus_id': pci_bus_id,
-            #     'driver_version': driver_version,
-            #     'pstate': pstate,
-            #     'pcie.link.gen.max': max_pcie_gen,
-            #     'pcie.link.gen.current': current_pcie_gen,
-            #     'temperature.gpu': temperature,
-            #     'utilization.gpu': util_info.gpu,
-            #     'utilization.memory': util_info.memory,
-            #     'memory.total': mem_info.total,
-            #     'memory.free': mem_info.free,
-            #     'memory.used': mem_info.used}
-
+            
             return [name, timestamp, pci_bus_id, driver_version, 
                 pstate, max_pcie_gen, current_pcie_gen, temperature,
                 util_info.gpu, util_info.memory, mem_info.total, 
