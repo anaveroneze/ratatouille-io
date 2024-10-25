@@ -1,5 +1,6 @@
 import argparse
 import time
+import pynvml
 import sys
 from .ratatouille import Monitor, Drawer, monitor_classes, merge_files, RatatouilleDependencyError
 from .ratatouille import RatatouillePortabilityError
@@ -35,6 +36,7 @@ def main():
                             help='Output file to store the merged data.')
     args = parser.parse_args(sys.argv[1:])
     if args.command == 'collect':
+        
         if 'all' in args.targets:
             to_monitor = monitor_classes.values()
         else:
@@ -52,6 +54,7 @@ def main():
         t = time.time()
         monitor.start_loop()
         t = time.time() - t
+
         print('Monitored the sytem for %d seconds' % int(t))
     elif args.command == 'plot':
         try:

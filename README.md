@@ -11,6 +11,22 @@ poetry install ratatouille
 
 Use other configuration file for newer python versions.
 
+To reinstall:
+
+```
+pip uninstall ratatouille
+/home/ana/.local/bin/poetry build
+pip install dist/ratatouille-0.1.0-py3-none-any.whl --force-reinstall
+```
+
+If error, try to clean the cache:
+
+```
+/home/ana/.local/bin/poetry list
+# For example:
+/home/ana/.local/bin/poetry cache clear  PyPI --all
+```
+
 ## Installation
 
 The best way to install `ratatouille` is from pypi:

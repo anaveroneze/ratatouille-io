@@ -5,9 +5,8 @@ import psutil
 import re
 import socket
 import signal
-import sys
 import os
-import io
+import pynvml
 from collections import OrderedDict
 
 
@@ -272,6 +271,60 @@ class Network(AbstractWatcher):
         self.last_byte_numbers = byte_numbers
         return speeds
 
+class GPU(AbstractWatcher):
+
+    header = ['name', 'timestamp', 'pci.bus_id', 'driver_version', 
+        'pstate', 'pcie.link.gen.max', 'pcie.link.gen.current', 'temperature.gpu', 
+        'utilization.gpu', 'utilization.memory', 'memory.total', 
+        'memory.free', 'memory.used'] # memory in MiB, utilization in %
+    
+    #Initialize GPU collector
+    pynvml.nvmlInit()
+
+    num_gpus = pynvml.nvmlDeviceGetCount()
+    gpu_info_list = []
+
+    for gpu in range(num_gpus):
+
+        @staticmethod
+        def get_values():
+
+            handle = pynvml.nvmlDeviceGetHandleByIndex(0)
+            name = pynvml.nvmlDeviceGetName(handle)
+            timestamp = time.time()
+            pci_bus_id = pynvml.nvmlDeviceGetPciInfo(handle).busId 
+            driver_version = pynvml.nvmlSystemGetDriverVersion() 
+            pstate = pynvml.nvmlDeviceGetPowerState(handle)
+            max_pcie_gen = pynvml.nvmlDeviceGetMaxPcieLinkGeneration(handle)
+            current_pcie_gen = pynvml.nvmlDeviceGetCurrPcieLinkGeneration(handle)
+            temperature = pynvml.nvmlDeviceGetTemperature(handle, pynvml.NVML_TEMPERATURE_GPU)
+            util_info = pynvml.nvmlDeviceGetUtilizationRates(handle)
+            mem_info = pynvml.nvmlDeviceGetMemoryInfo(handle)
+
+            # gpu_info = {
+            #     'name': name,
+            #     'timestamp': timestamp,
+            #     'pci.bus_id': pci_bus_id,
+            #     'driver_version': driver_version,
+            #     'pstate': pstate,
+            #     'pcie.link.gen.max': max_pcie_gen,
+            #     'pcie.link.gen.current': current_pcie_gen,
+            #     'temperature.gpu': temperature,
+            #     'utilization.gpu': util_info.gpu,
+            #     'utilization.memory': util_info.memory,
+            #     'memory.total': mem_info.total,
+            #     'memory.free': mem_info.free,
+            #     'memory.used': mem_info.used}
+
+            return [name, timestamp, pci_bus_id, driver_version, 
+                pstate, max_pcie_gen, current_pcie_gen, temperature,
+                util_info.gpu, util_info.memory, mem_info.total, 
+                mem_info.free, mem_info.used]
+
+    @staticmethod
+    def shutdown_nvml():
+        pynvml.nvmlShutdown()
+
 class IO(AbstractWatcher):
     header = ['DiskReads', 'DiskWrites']
     
@@ -294,6 +347,7 @@ class IO(AbstractWatcher):
         
 class Monitor:
     def __init__(self, watchers, output_file, time_interval):
+
         self.watchers = watchers
         self.time_interval = time_interval
         self.next_watch = time.time() + self.time_interval
@@ -320,12 +374,17 @@ class Monitor:
         self.writer.writerow(row)
 
     def start_loop(self):
-        while self.continue_monitoring:
-            sleep_time = self.next_watch - time.time()
-            if sleep_time > 0:
-                time.sleep(sleep_time)
-            self.next_watch = time.time() + self.time_interval
-            self.watch()
+        try:
+            while self.continue_monitoring:
+                sleep_time = self.next_watch - time.time()
+                if sleep_time > 0:
+                    time.sleep(sleep_time)
+                self.next_watch = time.time() + self.time_interval
+                self.watch()
+        finally:
+            # Cleanup step to shut down NVML once monitoring ends
+            GPU.shutdown_nvml()
+            self.file.close()
 
 monitor_classes = {
     'cpu_stats': CPUStats,
@@ -337,6 +396,7 @@ monitor_classes = {
     'network': Network,
     'fan_speed': FanSpeed,
     'io': IO,
+    'gpu': GPU,
 }
 
 
