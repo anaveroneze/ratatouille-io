@@ -9,6 +9,12 @@ curl -sSL https://install.python-poetry.org | python3 -
 poetry install ratatouille
 ```
 
+For NVIDIA GPUs monitoring install the python bindings for the NVIDIA Management Library (NVML) - C-based.
+
+```
+python3 -m pip install nvidia-ml-py
+```
+
 Use other configuration file for newer python versions.
 
 To reinstall:
